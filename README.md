@@ -224,3 +224,7 @@ computations for missing results.
 Another command for inspection is `ce-sym` that will just
 print out the current task's workflow tree in a symbolic form using
 a LISP-like functional syntax.
+
+A more visual alternative is `ce-viz` which will render a graphical
+representation of the task's workflow, with inputs/outputs decorated
+with human-readable labels.
