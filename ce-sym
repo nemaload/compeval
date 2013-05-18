@@ -4,31 +4,23 @@ use warnings;
 use strict;
 use v5.10;
 
-sub slurp {
-	my ($filename) = @_;
-	open my $fh, '<', $filename or die "$filename: $!";
+use FindBin;
+use lib $FindBin::Bin;
 
-	# Load and return list of lines, without trailing newlines
-	my @lines = <$fh>;
-	chomp @lines;
-	@lines;
-}
+use compeval::Task;
+
 
 sub print_workflow {
-	my ($subdir, $indent, $firstinput) = @_;
-	my ($kind) = slurp("$subdir/kind");
+	my ($workflow, $indent, $firstinput) = @_;
 
-	if ($kind eq 'input') {
-		my ($inpvar) = slurp("$subdir/value");
-		print "INPUT('$inpvar')";
+	if ($workflow->kind eq 'input') {
+		print "INPUT('".$workflow->value."')";
 
-	} elsif ($kind eq 'literal') {
-		my ($filename) = slurp("$subdir/value");
-		print "FILE('$filename')";
+	} elsif ($workflow->kind eq 'literal') {
+		print "FILE('".$workflow->value."')";
 
-	} elsif ($kind eq 'computation') {
-		my ($compname) = slurp("$subdir/value");
-		my (@slice) = slurp("$subdir/outputs");
+	} elsif ($workflow->kind eq 'computation') {
+		my $compname = $workflow->value;
 
 		# String with LISP-y function call
 		my $callstr = "($compname ";
@@ -41,32 +33,22 @@ sub print_workflow {
 
 		# Recursively print arguments
 		my $inputcount = 0;
-		my $lastseq = -1;
-		for my $input (<$subdir/inputs/*>) {
-			my ($seqno, $seqno2, $label) = ($input =~ m#^.*/(\d\d)(?:_(\d\d))?-(.*)#);
-			if ($seqno != $lastseq + 1) {
-				say STDERR "Warning: Input $input out-of-sequence ($seqno, expected ".($lastseq+1).")";
-			}
-			$lastseq = (defined $seqno2 ? $seqno2 : $seqno);
-
+		for my $input ($workflow->inputs) {
 			# Start a new line (and indent) unless we are the first input
 			$inputcount == 0 or print "\n$indent2";
-			print_workflow($input, $indent2, $inputcount == 0 ? 'firstinput' : undef);
+			print_workflow($workflow->input($input), $indent2, $inputcount == 0 ? 'firstinput' : undef);
 			$inputcount++;
 		}
 		# Close the call on next line if we had more than one argument
 		$inputcount < 2 or print "\n$indent ";
-		print ")[".join(', ', @slice)."]";
+		print ")[".join(', ', $workflow->outputs_slice)."]";
 	}
 }
 
 
--d 'workflow' or die "not in a task directory (directory 'workflow' not found)";
--d 'computations' or die "not in a task directory (directory 'computations' not found)";
--s 'inputs' or die "not in a task directory (file 'inputs' not found)";
+my $task = compeval::Task->new('.');
 
-my @inputs = slurp('inputs');
-say "Inputs: " . join(', ', map { "'$_'" } @inputs);
+say "Inputs: " . join(', ', map { "'$_'" } $task->inputnames());
 
-print_workflow('workflow', '', 'firstinput');
+print_workflow($task->workflow(), '', 'firstinput');
 print "\n"; # terminate with newline
