@@ -5,6 +5,7 @@ use strict;
 use v5.10;
 
 use compeval;
+use compeval::Computation;
 
 sub new {
 	my $class = shift;
@@ -20,6 +21,12 @@ sub new {
 	};
 
 	bless $self, $class;
+}
+
+sub name {
+	my $self = shift;
+	($a = $self->{dir}) =~ tr#/#.#;
+	$a;
 }
 
 sub kind {
@@ -86,6 +93,12 @@ sub input {
 	}
 
 	return $workflow;
+}
+
+sub computation {
+	my $self = shift;
+	my ($basedir) = @_;
+	return compeval::Computation->new($basedir . '/computations/' . $self->value);
 }
 
 1;
