@@ -87,17 +87,14 @@ A task is a named Git repository with directory structure like
 
 	computations/...
 	workflow/...
-	inputs/nn
+	inputs
 
 The `computations/` subdirectory is usually a submodule and contains
 a library of computation executables.  The `workflow/` subdirectory tree
 contains the computation expression tree.
 
-The `inputs/` subdirectory tree shall contain a file entry for
-each input passed, with the filename corresponding to the number of
-the input (two digits zero-padded, numbered from zero). The contents
-of the file is a single line assigning a symbolic name to each input
-for referral from workflows.
+The `inputs/` text file shall contain a line for each input passed,
+assigning a symbolic name to each input for referral from workflows.
 
 ### Workflows ###
 
