@@ -1,0 +1,72 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use v5.10;
+
+sub slurp {
+	my ($filename) = @_;
+	open my $fh, '<', $filename or die "$filename: $!";
+
+	# Load and return list of lines, without trailing newlines
+	my @lines = <$fh>;
+	chomp @lines;
+	@lines;
+}
+
+sub print_workflow {
+	my ($subdir, $indent, $firstinput) = @_;
+	my ($kind) = slurp("$subdir/kind");
+
+	if ($kind eq 'input') {
+		my ($inpvar) = slurp("$subdir/value");
+		print "INPUT('$inpvar')";
+
+	} elsif ($kind eq 'literal') {
+		my ($filename) = slurp("$subdir/value");
+		print "FILE('$filename')";
+
+	} elsif ($kind eq 'computation') {
+		my ($compname) = slurp("$subdir/value");
+		my (@slice) = slurp("$subdir/outputs");
+
+		# String with LISP-y function call
+		my $callstr = "($compname ";
+		# Space indentation aligning with callstr - callstr converted to spaces
+		my $callstrspaces = ' ' x length $callstr;
+		my $indent2 = $indent . $callstrspaces;
+
+		# Print function call
+		print "$callstr";
+
+		# Recursively print arguments
+		my $inputcount = 0;
+		my $lastseq = -1;
+		for my $input (<$subdir/inputs/*>) {
+			my ($seqno, $seqno2, $label) = ($input =~ m#^.*/(\d\d)(?:_(\d\d))?-(.*)#);
+			if ($seqno != $lastseq + 1) {
+				say STDERR "Warning: Input $input out-of-sequence ($seqno, expected ".($lastseq+1).")";
+			}
+			$lastseq = (defined $seqno2 ? $seqno2 : $seqno);
+
+			# Start a new line (and indent) unless we are the first input
+			$inputcount == 0 or print "\n$indent2";
+			print_workflow($input, $indent2, $inputcount == 0 ? 'firstinput' : undef);
+			$inputcount++;
+		}
+		# Close the call on next line if we had more than one argument
+		$inputcount < 2 or print "\n$indent ";
+		print ")[".join(', ', @slice)."]";
+	}
+}
+
+
+-d 'workflow' or die "not in a task directory (directory 'workflow' not found)";
+-d 'computations' or die "not in a task directory (directory 'computations' not found)";
+-s 'inputs' or die "not in a task directory (file 'inputs' not found)";
+
+my @inputs = slurp('inputs');
+say "Inputs: " . join(', ', map { "'$_'" } @inputs);
+
+print_workflow('workflow', '', 'firstinput');
+print "\n"; # terminate with newline
