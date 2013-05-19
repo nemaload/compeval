@@ -55,13 +55,13 @@ sub exec_workflow {
 			system('mkdir', '-p', dirname($filename));
 			my $status = -e $filename ? 'ok' : 'MISSING';
 			$missing += not -e $filename;
-			say $indent.' > ', ($computation->outputs)[$output].": $filename $status";
+			say $indent.'`> ', ($computation->outputs)[$output].": $filename $status";
 			push @outputs, $filename;
 		}
 
 		# Re-exec if any output is missing
 		if ($missing > 0 and not $no_exec) {
-			say $indent.' * ', 'computing...';
+			say $indent.'`* ', 'computing...';
 			$computation->exec(@args, @outputs);
 		}
 
