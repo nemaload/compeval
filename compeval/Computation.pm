@@ -33,4 +33,10 @@ sub outputs {
 	return @{$self->{outputs}};
 }
 
+sub exec {
+	my $self = shift;
+	my (@args) = @_;
+	system($self->{dir}.'/exec', @args);
+}
+
 1;
