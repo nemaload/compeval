@@ -103,4 +103,10 @@ unless ($no_exec) {
 
 # Execute!
 
-exec_workflow($task->workflow(), 'TASK', '', '.');
+my @outputs = exec_workflow($task->workflow(), 'TASK', '', '.');
+
+
+say "\nTask outputs are:";
+for my $outputfile (@outputs) {
+	say '    ', $outputfile;
+}
