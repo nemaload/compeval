@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use v5.10;
+
+use FindBin;
+use lib $FindBin::Bin;
+
+use File::Basename;
+
+use compeval;
+use compeval::Task;
+use compeval::GFS;
+
+my $no_exec = 0;
+my $gfs;
+my %inputs;
+
+
+sub exec_workflow {
+	my ($workflow, $label, $indent, $basedir) = @_;
+
+	if ($workflow->kind eq 'input') {
+		my $inputfile = $inputs{$workflow->value};
+		my $filename = $gfs->pathof_output($workflow, 0, sha1f($inputfile));
+		my $status = -e $filename ? 'ok' : 'MISSING!!!';
+		say $indent, "$label: INPUT('".$workflow->value."') $filename $status";
+		return $filename;
+
+	} elsif ($workflow->kind eq 'literal') {
+		my $filename = $gfs->pathof_output($workflow, 0, $workflow->value);
+		my $status = -e $filename ? 'ok' : 'MISSING!!!';
+		say $indent, "$label: FILE('".$workflow->value."') $filename $status";
+		return $filename;
+
+	} elsif ($workflow->kind eq 'computation') {
+		my $compname = $workflow->value;
+		my $computation = $workflow->computation($basedir);
+		my @args;
+
+		# Recurse to inputs
+		for my $input ($workflow->inputs) {
+			my $inpworkflow = $workflow->input($input);
+			push @args, exec_workflow($inpworkflow, $input->{label}, $indent.'    ', $basedir);
+		}
+
+		say $indent, "$compname ($label)";
+
+		my @sha1args = map { sha1f($_) } @args;
+		my @outputs;
+		my $missing = 0;
+		for my $output ($workflow->outputs_slice) {
+			my $filename = $gfs->pathof_output($workflow, $output+0, @sha1args);
+			system('mkdir', '-p', dirname($filename));
+			my $status = -e $filename ? 'ok' : 'MISSING';
+			$missing += not -e $filename;
+			say $indent.' > ', ($computation->outputs)[$output].": $filename $status";
+			push @outputs, $filename;
+		}
+
+		# Re-exec if any output is missing
+		if ($missing > 0 and not $no_exec) {
+			say $indent.' * ', 'computing...';
+			$computation->exec(@args, @outputs);
+		}
+
+		return @outputs;
+	}
+}
+
+
+# Initialize task
+
+my $task = compeval::Task->new('.');
+
+
+# Process parameters
+
+if ($ARGV[0] eq '-n') {
+	$no_exec = 1;
+	shift @ARGV;
+}
+$gfs = compeval::GFS->new(shift @ARGV, '.');
+
+my @inputnames = $task->inputnames;
+if (@ARGV != @inputnames) {
+	die "expected ".(scalar @inputnames)." inputs, got ".(scalar @ARGV);
+}
+%inputs = map { $inputnames[$_] => $ARGV[$_] } 0..$#inputnames;
+
+
+# Store inputs in GFS (this is not essential, just for future reference)
+
+unless ($no_exec) {
+	for my $inputfile (@ARGV) {
+		my $filename = $gfs->pathof($gfs->nameof_input(sha1f($inputfile)));
+		system('mkdir', '-p', dirname($filename));
+		system('cp', $inputfile, $filename);
+	}
+}
+
+
+# Execute!
+
+exec_workflow($task->workflow(), 'TASK', '', '.');
