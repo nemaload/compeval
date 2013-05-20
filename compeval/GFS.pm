@@ -13,11 +13,9 @@ sub new {
 	-d "$dir" or die "$dir not a global file storage (directory not found)";
 	-d "$basedir/computations" or die "$basedir not a task directory ('computations' subdirectory not found)";
 
-	my $comphead = `(cd "$basedir/computations" && git rev-parse HEAD)`;
-
 	my $self = {
 		dir => $dir,
-		comphead => substr($comphead, 0, 12),
+		basedir => $basedir,
 	};
 
 	bless $self, $class;
@@ -40,7 +38,9 @@ sub pathof_output {
 	} elsif ($workflow->kind eq 'literal') {
 		$name = $inputs[0];
 	} elsif ($workflow->kind eq 'computation') {
-		$name = sprintf('c_%s/%s/%02d/%s', $workflow->value, $self->{comphead}, $output_i, join('_', @inputs));
+		my ($basedir, $compname) = ($self->{basedir}, $workflow->value);
+		my $comphead = substr(`(cd "$basedir/computations/$compname" && git rev-parse HEAD)`, 0, 12);
+		$name = sprintf('c_%s/%s/%02d/%s', $workflow->value, $comphead, $output_i, join('_', @inputs));
 	}
 
 	return $self->pathof($name);

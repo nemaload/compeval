@@ -90,7 +90,8 @@ A task is a named Git repository with directory structure like
 	inputs
 
 The `computations/` subdirectory is usually a submodule and contains
-a library of computation executables.  The `workflow/` subdirectory tree
+a library of computation executables; alternatively, each computation
+could reside in a submodule.  The `workflow/` subdirectory tree
 contains the computation expression tree.
 
 The `inputs/` text file shall contain a line for each input passed,
@@ -177,7 +178,7 @@ production
 	c_cname/ccid/nn/input0_input1_...
 
 where `c_` is literal, `cname` is the symbolic name of the computation,
-`ccid` is HEAD commit id of the `computations/` subdirectory, `input0`
+`ccid` is HEAD commit id of the `computations/cname` subdirectory, `input0`
 etc. are SHA1 hashes of the inputs of the computation and `nn` is the
 output number (00 for the first output, etc.). Only first twelve digits
 of each hash are used in the filename.
