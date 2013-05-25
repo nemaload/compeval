@@ -10,14 +10,23 @@ sub new {
 	my $class = shift;
 	my ($dir) = @_;
 
-	-s "$dir/inputs" or die "$dir not a computation directory (file 'inputs' not found)";
-	-s "$dir/outputs" or die "$dir not a computation directory (file 'outputs' not found)";
-	-x "$dir/exec" or die "$dir not a computation directory (file 'exec' not found)";
+	my $inputfile = "$dir/compeval-inputs";
+	-s $inputfile or $inputfile = "$dir/inputs";
+	-s $inputfile or die "$dir not a computation directory (file 'inputs' or 'compeval-inputs' not found)";
+
+	my $outputfile = "$dir/compeval-outputs";
+	-s $outputfile or $outputfile = "$dir/outputs";
+	-s $outputfile or die "$dir not a computation directory (file 'outputs' or 'compeval-outputs' not found)";
+
+	my $execfile = "$dir/compeval-exec";
+	-x $execfile or $execfile = "$dir/exec";
+	-x $execfile or die "$dir not a computation directory (file 'exec' or 'compeval-exec' not found or not executable)";
 
 	my $self = {
 		dir => $dir,
-		inputs => [slurp("$dir/inputs")],
-		outputs => [slurp("$dir/outputs")],
+		inputs => [slurp($inputfile)],
+		outputs => [slurp($outputfile)],
+		execfile => $execfile,
 	};
 
 	bless $self, $class;
@@ -36,7 +45,7 @@ sub outputs {
 sub exec {
 	my $self = shift;
 	my (@args) = @_;
-	system($self->{dir}.'/exec', @args);
+	system($self->{execfile}, @args);
 }
 
 1;

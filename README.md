@@ -164,6 +164,10 @@ CompEval. In case this model is used, each `exec` file version
 should be tied to a single particular version of the main executable
 to ensure integrity of the whole evaluation and call reuse.
 
+Each of these files may have its name prefixed with the `compeval-`
+string; this is useful to keep things tidy when the submodule is
+actually the repository of the to-be-run software.
+
 ### Global File Storage ###
 
 All inputs and outputs encountered in the processing of a single job
