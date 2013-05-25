@@ -15,6 +15,8 @@ sub new {
 	-d "$dir/computations" or die "$dir not a task directory (directory 'computations' not found)";
 	-s "$dir/inputs" or die "$dir not a task directory (file 'inputs' not found)";
 
+	system('git', '--work-tree', $dir, 'submodule', 'update', '--init');
+
 	bless \$dir, $class;
 }
 
