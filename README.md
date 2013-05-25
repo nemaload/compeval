@@ -164,6 +164,9 @@ CompEval. In case this model is used, each `exec` file version
 should be tied to a single particular version of the main executable
 to ensure integrity of the whole evaluation and call reuse.
 
+The computation may also contain some Docker setup files; this is
+covered by [dedicated documentation](README.Docker).
+
 Each of these files may have its name prefixed with the `compeval-`
 string; this is useful to keep things tidy when the submodule is
 actually the repository of the to-be-run software.
