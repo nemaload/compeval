@@ -9,7 +9,7 @@ use compeval::Computation;
 
 sub new {
 	my $class = shift;
-	my ($dir) = @_;
+	my ($dir, $basedir) = @_;
 
 	-s "$dir/kind" or die "$dir not a workflow directory (file 'kind' not found)";
 	-s "$dir/value" or die "$dir not a workflow directory (file 'value' not found)";
@@ -18,6 +18,7 @@ sub new {
 		dir => $dir,
 		kind => (slurp("$dir/kind"))[0],
 		value => (slurp("$dir/value"))[0],
+		basedir => $basedir,
 	};
 
 	bless $self, $class;
@@ -83,7 +84,7 @@ sub inputs {
 sub input {
 	my $self = shift;
 	my ($input) = @_;
-	my $workflow = compeval::Workflow->new($self->{dir} . '/inputs/' . $input->{name});
+	my $workflow = compeval::Workflow->new($self->{dir} . '/inputs/' . $input->{name}, $self->{basedir});
 
 	# A sanity check - output slice should be as big as inputs count for this computation
 	my $output_count = scalar $workflow->outputs_slice();
@@ -97,8 +98,7 @@ sub input {
 
 sub computation {
 	my $self = shift;
-	my ($basedir) = @_;
-	return compeval::Computation->new($basedir . '/computations/' . $self->value);
+	return compeval::Computation->new($self->{basedir} . '/computations/' . $self->value);
 }
 
 1;

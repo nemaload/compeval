@@ -13,7 +13,7 @@ my $dot;
 
 
 sub print_workflow {
-	my ($workflow, $basedir) = @_;
+	my ($workflow) = @_;
 
 	if ($workflow->kind eq 'input') {
 		printf $dot '"%s" [label="INPUT %s"]'."\n", $workflow->name, $workflow->value;
@@ -23,7 +23,7 @@ sub print_workflow {
 
 	} elsif ($workflow->kind eq 'computation') {
 		my $compname = $workflow->value;
-		my $computation = $workflow->computation($basedir);
+		my $computation = $workflow->computation();
 		printf $dot '"%s" [label="%s"]'."\n", $workflow->name, $compname;
 
 		# Recurse to inputs, connect them with edges
@@ -32,12 +32,12 @@ sub print_workflow {
 
 			# Print subtree
 
-			print_workflow($inpworkflow, $basedir);
+			print_workflow($inpworkflow);
 
 			# Connect the subtree
 
-			my @compinput = ($workflow->computation($basedir)->inputs)[$input->{seqno_start}..$input->{seqno_end}];
-			my @compoutput = $inpworkflow->kind eq 'computation' ? ($inpworkflow->computation($basedir)->outputs)[$inpworkflow->outputs_slice] : ();
+			my @compinput = ($workflow->computation()->inputs)[$input->{seqno_start}..$input->{seqno_end}];
+			my @compoutput = $inpworkflow->kind eq 'computation' ? ($inpworkflow->computation()->outputs)[$inpworkflow->outputs_slice] : ();
 
 			my $label = sprintf('%s : %s%s', join(', ', @compinput), $input->{label}, @compoutput ? ' ['.join(', ', @compoutput).']' : '');
 			printf $dot '"%s" -> "%s" [label="%s"]'."\n", $inpworkflow->name, $workflow->name, $label;
@@ -52,6 +52,6 @@ open $dot, '|-', 'dot', '-Tx11' or die "dot: $!";
 say $dot 'digraph {';
 say $dot 'graph [rankdir="LR", nodesep=1]';
 
-print_workflow($task->workflow(), '.');
+print_workflow($task->workflow());
 
 say $dot '}';

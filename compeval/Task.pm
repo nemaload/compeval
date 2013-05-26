@@ -22,7 +22,7 @@ sub new {
 
 sub workflow {
 	my $self = shift;
-	return compeval::Workflow->new("$$self/workflow");
+	return compeval::Workflow->new("$$self/workflow", $$self);
 }
 
 sub inputnames {

@@ -19,7 +19,7 @@ my %inputs;
 
 
 sub exec_workflow {
-	my ($workflow, $label, $indent, $basedir) = @_;
+	my ($workflow, $label, $indent) = @_;
 
 	if ($workflow->kind eq 'input') {
 		my $inputfile = $inputs{$workflow->value};
@@ -38,13 +38,13 @@ sub exec_workflow {
 
 	} elsif ($workflow->kind eq 'computation') {
 		my $compname = $workflow->value;
-		my $computation = $workflow->computation($basedir);
+		my $computation = $workflow->computation();
 		my @args;
 
 		# Recurse to inputs
 		for my $input ($workflow->inputs) {
 			my $inpworkflow = $workflow->input($input);
-			push @args, exec_workflow($inpworkflow, $input->{label}, $indent.'    ', $basedir);
+			push @args, exec_workflow($inpworkflow, $input->{label}, $indent.'    ');
 		}
 
 		say $indent, "$compname ($label)";
