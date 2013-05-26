@@ -75,4 +75,6 @@ computation id.
 The `ce-run` command will run the computation executable (the contents
 of the `exec` file as usual) within a Docker container.  The parameters
 of the executable run in the container then explicitly refer to the
-global file storage mount point within the container.
+global file storage mount point within the container. The current working
+directory of the executable is the (bind mount of the) computation
+directory; it should be treated as read-only!
