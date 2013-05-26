@@ -27,7 +27,7 @@ sub nameof_input {
 	return 'tinputs/'.substr($hash, 0, 2).'/'.substr($hash, 2);
 }
 
-sub pathof_output {
+sub nameof_output {
 	my $self = shift;
 	# @inputs are first 12 digits of the SHA1 hashes of files (except for the 'literal' kind)
 	my ($workflow, $output_i, @inputs) = @_;
@@ -43,7 +43,7 @@ sub pathof_output {
 		$name = sprintf('c_%s/%s/%02d/%s', $workflow->value, $comphead, $output_i, join('_', @inputs));
 	}
 
-	return $self->pathof($name);
+	return $name;
 }
 
 sub pathof {

@@ -23,15 +23,17 @@ sub exec_workflow {
 
 	if ($workflow->kind eq 'input') {
 		my $inputfile = $inputs{$workflow->value};
-		my $filename = $gfs->pathof_output($workflow, 0, sha1f($inputfile));
-		my $status = -e $filename ? 'ok' : 'MISSING!!!';
-		say $indent, "$label: INPUT('".$workflow->value."') $filename $status";
+		my $filename = $gfs->nameof_output($workflow, 0, sha1f($inputfile));
+		my $filepath = $gfs->pathof($filename);
+		my $status = -e $filepath ? 'ok' : 'MISSING!!!';
+		say $indent, "$label: INPUT('".$workflow->value."') $filepath $status";
 		return $filename;
 
 	} elsif ($workflow->kind eq 'literal') {
-		my $filename = $gfs->pathof_output($workflow, 0, $workflow->value);
-		my $status = -e $filename ? 'ok' : 'MISSING!!!';
-		say $indent, "$label: FILE('".$workflow->value."') $filename $status";
+		my $filename = $gfs->nameof_output($workflow, 0, $workflow->value);
+		my $filepath = $gfs->pathof($filename);
+		my $status = -e $filepath ? 'ok' : 'MISSING!!!';
+		say $indent, "$label: FILE('".$workflow->value."') $filepath $status";
 		return $filename;
 
 	} elsif ($workflow->kind eq 'computation') {
@@ -47,22 +49,23 @@ sub exec_workflow {
 
 		say $indent, "$compname ($label)";
 
-		my @sha1args = map { sha1f($_) } @args;
+		my @sha1args = map { sha1f($gfs->pathof($_)) } @args;
 		my @outputs;
 		my $missing = 0;
 		for my $output ($workflow->outputs_slice) {
-			my $filename = $gfs->pathof_output($workflow, $output+0, @sha1args);
-			system('mkdir', '-p', dirname($filename));
-			my $status = -e $filename ? 'ok' : 'MISSING';
-			$missing += not -e $filename;
-			say $indent.'`> ', ($computation->outputs)[$output].": $filename $status";
+			my $filename = $gfs->nameof_output($workflow, $output+0, @sha1args);
+			my $filepath = $gfs->pathof($filename);
+			system('mkdir', '-p', dirname($filepath));
+			my $status = -e $filepath ? 'ok' : 'MISSING';
+			$missing += not -e $filepath;
+			say $indent.'`> ', ($computation->outputs)[$output].": $filepath $status";
 			push @outputs, $filename;
 		}
 
 		# Re-exec if any output is missing
 		if ($missing > 0 and not $no_exec) {
 			say $indent.'`* ', 'computing...';
-			$computation->exec(@args, @outputs);
+			$computation->exec(map { $gfs->pathof($_) } (@args, @outputs));
 		}
 
 		return @outputs;
