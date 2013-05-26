@@ -24,14 +24,32 @@ rely on any persistent state that would be stored in the container.
 Also, it technically does not have to be re-entrant, however
 breaking that property is probably not a good practice.
 
-Local Image Rebuilds
---------------------
+Docker Images of Computations
+-----------------------------
+
+In principle, CompEval does not care about the genesis of the
+Docker images used. However, the recommended best practice is to:
+
+  * Base computation images on the `nemaload/base` image (which has
+been crafted manually and contains only stuff listed in `/README`).
+
+  * Create per-computation images using the Docker Builder files
+that contain the complete setup instructions in a text format:
+
+	http://docs.docker.io/en/latest/use/builder/
+
+  * Store the Docker Builder files as a part of the computation
+software Git repo and also include (as submodule) this Git repo in
+the computation directory of the compeval workflow; i.e. we have
+the sources, compeval computation descriptor files and Docker Builder
+image recipe all at the same place.
+
 
 In the future, we *may* want to avoid re-downloading new images
 on each minor change and instead rebuild them locally; this depends
 on how will Docker deal with our changes. If that's required, we can
-add the Docker build files to the computation Git repo and rebuild
-the images based on these.
+use the Docker build files in the computation Git repo and rebuild
+the images based on them locally.
 
 Implementation
 --------------
