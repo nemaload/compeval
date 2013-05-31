@@ -5,6 +5,7 @@ use strict;
 use v5.10;
 
 use compeval;
+use compeval::Computation;
 use compeval::Workflow;
 
 sub new {
@@ -28,6 +29,17 @@ sub workflow {
 sub inputnames {
 	my $self = shift;
 	return slurp("$$self/inputs");
+}
+
+# Update images of all the computations
+sub images_update {
+	my $self = shift;
+	my @compdirs = glob($$self.'/computations/*');
+
+	for my $compdir (@compdirs) {
+		my $comp = compeval::Computation->new($compdir);
+		$comp->image_update();
+	}
 }
 
 1;

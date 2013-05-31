@@ -2,7 +2,9 @@ package compeval::GFS;
 
 use warnings;
 use strict;
-use v5.10;
+use v5.10.1;
+
+use Cwd;
 
 use compeval;
 
@@ -19,6 +21,11 @@ sub new {
 	};
 
 	bless $self, $class;
+}
+
+sub dir {
+	my $self = shift;
+	return Cwd::abs_path($self->{dir});
 }
 
 sub nameof_input {
@@ -40,7 +47,8 @@ sub nameof_output {
 	} elsif ($workflow->kind eq 'computation') {
 		my ($basedir, $compname) = ($self->{basedir}, $workflow->value);
 		my $comphead = substr(`(cd "$basedir/computations/$compname" && git rev-parse HEAD)`, 0, 12);
-		$name = sprintf('c_%s/%s/%02d/%s', $workflow->value, $comphead, $output_i, join('_', @inputs));
+		my $imageid = $workflow->computation->image_id // '';
+		$name = sprintf('c_%s/%s%s/%02d/%s', $workflow->value, $comphead, $imageid, $output_i, join('_', @inputs));
 	}
 
 	return $name;

@@ -65,7 +65,7 @@ sub exec_workflow {
 		# Re-exec if any output is missing
 		if ($missing > 0 and not $no_exec) {
 			say $indent.'`* ', 'computing...';
-			$computation->exec(map { $gfs->pathof($_) } (@args, @outputs));
+			$computation->exec($gfs, @args, @outputs);
 		}
 
 		return @outputs;
@@ -76,6 +76,7 @@ sub exec_workflow {
 # Initialize task
 
 my $task = compeval::Task->new('.');
+$task->images_update();
 
 
 # Process parameters

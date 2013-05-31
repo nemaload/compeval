@@ -54,6 +54,13 @@ the images based on them locally.
 Implementation
 --------------
 
+### Installation
+
+You need to use Docker with run command supporting the `-b` bind
+mount switch: https://github.com/dotcloud/docker/pull/602
+
+Currently, you can e.g. use https://github.com/nemaload/docker
+
 ### Setup
 
 The computation directory can contain a file called `docker-image`;
@@ -79,9 +86,3 @@ to the executable relative to the container root.
 
 The parameters of the executable run in the container have the same
 semantics as usual; they are valid to use within the container as-is.
-
-(One would expect the GFS and possibly even the computation directory
-to be available in the container. This is not the case so far due
-to the limitations of the current docker version so we do some horrid
-hacks to just make input/output work for now and make no other
-guarantees.)
